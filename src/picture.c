@@ -252,6 +252,75 @@ size_allocate_cb ()
     picture_fit_to_window ();
 }
 
+static gboolean
+handle_stdin (GIOChannel * channel, GIOCondition condition, gpointer data)
+{
+  GtkWidget *ev;
+  ev = data;
+  if ((condition & G_IO_IN) || (condition & (G_IO_IN | G_IO_HUP)))
+    {
+      GString *string;
+      GError *err = NULL;
+      gint status;
+
+      string = g_string_new (NULL);
+      while (channel->is_readable != TRUE)
+        usleep (100);
+
+      do
+        {
+          status = g_io_channel_read_line_string (channel, string, NULL, &err);
+          while (gtk_events_pending ())
+            gtk_main_iteration ();
+        }
+      while (status == G_IO_STATUS_AGAIN);
+      strip_new_line (string->str);
+
+      if (status != G_IO_STATUS_NORMAL)
+        {
+          if (err)
+            {
+              g_printerr ("yad_picture_handle_stdin(): %s\n", err->message);
+              g_error_free (err);
+              err = NULL;
+            }
+          /* stop handling */
+          g_io_channel_shutdown (channel, TRUE, NULL);
+          return FALSE;
+        }
+
+      if (string->str[0] == '\014')
+        {
+          /* clear picture if ^L received */
+          gtk_image_set_from_icon_name (GTK_IMAGE (picture), "image-missing", GTK_ICON_SIZE_DIALOG);
+        }
+      else if (string->len > 0)
+        {
+          if (g_file_test (string->str, G_FILE_TEST_EXISTS)) {
+                gtk_image_clear (GTK_IMAGE (picture));
+                while (gtk_events_pending ())
+                  gtk_main_iteration ();
+                load_picture (string->str);
+                if (loaded && !animated)
+                   {
+                     create_popup_menu ();
+                     g_signal_connect (G_OBJECT (ev), "button-press-event", G_CALLBACK (button_handler), NULL);
+                     g_signal_connect (G_OBJECT (ev), "key-press-event", G_CALLBACK (key_handler), NULL);
+                     g_signal_connect (G_OBJECT (ev), "size-allocate", G_CALLBACK (size_allocate_cb), NULL);
+                   }
+                 printf ("%s\n", string->str);
+              }
+          else {
+                 gtk_image_set_from_icon_name (GTK_IMAGE (picture), "image-missing", GTK_ICON_SIZE_DIALOG);
+               }
+        }
+
+      g_string_free (string, TRUE);
+    }
+
+  return TRUE;
+}
+
 GtkWidget *
 picture_create_widget (GtkWidget * dlg)
 {
@@ -275,6 +344,20 @@ picture_create_widget (GtkWidget * dlg)
   if (options.common_data.uri &&
       g_file_test (options.common_data.uri, G_FILE_TEST_EXISTS))
     load_picture (options.common_data.uri);
+  else if (options.common_data.listen)
+    {
+      /* read from stdin */
+      GIOChannel *channel;
+
+      gtk_image_set_from_icon_name (GTK_IMAGE (picture), "image-missing", GTK_ICON_SIZE_DIALOG);
+      channel = g_io_channel_unix_new (0);
+      if (channel)
+        {
+          g_io_channel_set_encoding (channel, NULL, NULL);
+          g_io_channel_set_flags (channel, G_IO_FLAG_NONBLOCK, NULL);
+          g_io_add_watch (channel, G_IO_IN | G_IO_HUP, handle_stdin, ev);
+        }
+    }
   else
     gtk_image_set_from_icon_name (GTK_IMAGE (picture), "image-missing", GTK_ICON_SIZE_DIALOG);
 
