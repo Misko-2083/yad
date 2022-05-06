@@ -83,6 +83,7 @@ static gboolean notification_mode = FALSE;
 #endif
 static gboolean paned_mode = FALSE;
 static gboolean picture_mode = FALSE;
+static gboolean places_mode = FALSE;
 static gboolean print_mode = FALSE;
 static gboolean progress_mode = FALSE;
 static gboolean scale_mode = FALSE;
@@ -568,6 +569,12 @@ static GOptionEntry picture_options[] = {
     N_("Set increment for picture scaling (default - 5)"), N_("NUMBER") },
   { "image-changed", 0, 0, G_OPTION_ARG_STRING, &options.picture_data.change_cmd,
     N_("Set action on image changing"), N_("CMD") },
+  { NULL }
+};
+
+static GOptionEntry places_options[] = {
+  { "places", 0, G_OPTION_FLAG_IN_MAIN, G_OPTION_ARG_NONE, &places_mode,
+    N_("Display places dialog"), NULL },
   { NULL }
 };
 
@@ -1536,6 +1543,8 @@ yad_set_mode (void)
     options.mode = YAD_MODE_PANED;
   else if (picture_mode)
     options.mode = YAD_MODE_PICTURE;
+  else if (places_mode)
+    options.mode = YAD_MODE_PLACES;
   else if (print_mode)
     options.mode = YAD_MODE_PRINT;
   else if (progress_mode)
@@ -2041,6 +2050,12 @@ yad_create_context (void)
   /* Adds picture option entries */
   a_group = g_option_group_new ("picture", _("Picture dialog options"), _("Show picture dialog options"), NULL, NULL);
   g_option_group_add_entries (a_group, picture_options);
+  g_option_group_set_translation_domain (a_group, GETTEXT_PACKAGE);
+  g_option_context_add_group (tmp_ctx, a_group);
+
+  /* Adds places sidebar option entries */
+  a_group = g_option_group_new ("places", _("Places dialog options"), _("Show places dialog options"), NULL, NULL);
+  g_option_group_add_entries (a_group, places_options);
   g_option_group_set_translation_domain (a_group, GETTEXT_PACKAGE);
   g_option_context_add_group (tmp_ctx, a_group);
 
