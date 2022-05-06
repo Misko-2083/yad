@@ -301,6 +301,9 @@ create_layout (GtkWidget *dlg)
     case YAD_MODE_PICTURE:
       mw = picture_create_widget (dlg);
       break;
+    case YAD_MODE_PLACES:
+      mw = places_sidebar_create_widget (dlg);
+      break;
     case YAD_MODE_PROGRESS:
       mw = progress_create_widget (dlg);
       break;
@@ -513,6 +516,9 @@ create_dialog (void)
   if (options.mode == YAD_MODE_HTML && options.html_data.browser && !options.data.buttons)
     options.data.no_buttons = TRUE;
 #endif
+  /* enable no-buttons mode if --places is specified and sets no custom buttons */
+  if (options.mode == YAD_MODE_PLACES && !options.data.buttons)
+    options.data.no_buttons = TRUE;
 
   if (!options.data.no_buttons)
     {
