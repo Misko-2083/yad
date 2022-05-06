@@ -24,6 +24,7 @@ yad_SOURCES = 		\
 	option.c		\
 	paned.c			\
 	picture.c       \
+	places.c		\
 	print.c			\
 	progress.c		\
 	scale.c			\
