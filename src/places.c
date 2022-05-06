@@ -41,6 +41,8 @@ places_sidebar_activated_cb (GtkPlacesSidebar * placessiderbar, gpointer data)
      g_printf ("%s", g_filename_to_utf8 (path, -1, NULL, NULL, NULL));
 
   g_printf ("\n");
+  fflush (stdout);
+
   g_free(path);
 }
 
