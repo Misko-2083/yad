@@ -88,6 +88,7 @@ typedef enum {
 #endif
   YAD_MODE_PANED,
   YAD_MODE_PICTURE,
+  YAD_MODE_PLACES,
   YAD_MODE_PRINT,
   YAD_MODE_PROGRESS,
   YAD_MODE_SCALE,
@@ -152,6 +153,10 @@ typedef enum {
   YAD_PICTURE_FIT,
   YAD_PICTURE_ORIG
 } YadPictureType;
+
+typedef enum {
+  YAD_NORMAL = 0,
+} YadPlacesType;
 
 typedef enum {
   YAD_PRINT_TEXT = 0,
@@ -485,6 +490,10 @@ typedef struct {
   gchar *confirm_text;
 } YadTextData;
 
+typedef struct {
+  GtkWidget *placessiderbar;
+} YadPlacesSidebar;
+
 #ifdef HAVE_SOURCEVIEW
 typedef struct {
   gchar *lang;
@@ -665,6 +674,7 @@ GtkWidget *list_create_widget (GtkWidget *dlg);
 GtkWidget *notebook_create_widget (GtkWidget *dlg);
 GtkWidget *paned_create_widget (GtkWidget *dlg);
 GtkWidget *picture_create_widget (GtkWidget *dlg);
+GtkWidget *places_sidebar_create_widget (GtkWidget *dlg);
 GtkWidget *progress_create_widget (GtkWidget *dlg);
 GtkWidget *scale_create_widget (GtkWidget *dlg);
 GtkWidget *text_create_widget (GtkWidget *dlg);
