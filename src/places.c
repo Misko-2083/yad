@@ -24,26 +24,53 @@ static GtkWidget *placessiderbar;
 static void
 places_sidebar_activated_cb (GtkPlacesSidebar * placessiderbar, gpointer data)
 {
-  gchar *path;
+  GError *error = NULL;
+  GFileEnumerator *enumerator = NULL;
+  GFileQueryInfoFlags flags = G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS;
+  const char* attributes = "standard::*, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME";
 
-  path =  g_file_get_path (data);
+  enumerator = g_file_enumerate_children (data, attributes,
+                                         flags,
+                                         NULL,
+                                         &error);
 
-  if (path == NULL)
-     path = g_file_get_uri (data);
+  if (!g_file_enumerator_next_file (enumerator, NULL, NULL))  // If folder is empty
+      g_print ("\n");
 
-  if (options.common_data.quoted_output)
-    {
-      gchar *buf = g_shell_quote (g_filename_to_utf8 (path, -1, NULL, NULL, NULL));
-      g_printf ("%s", buf);
-      g_free (buf);
-    }
-  else
-     g_printf ("%s", g_filename_to_utf8 (path, -1, NULL, NULL, NULL));
+  if (error)
+    g_printerr ("%s\n", error->message);
 
-  g_printf ("\n");
+  while (TRUE)
+  {
+     GFileInfo *info;
+     GFile *child = NULL;
+     gchar *name;
+
+     if (!g_file_enumerator_iterate (enumerator, &info, NULL, NULL, &error))
+       goto out;
+     if (!info)
+       break;
+
+     child = g_file_enumerator_get_child (enumerator, info);
+     name = g_file_get_parse_name (child);
+
+     g_printf ("%s\n", name);
+
+     g_free(name);
+
+     if (child)
+       g_object_unref(child);
+  }
+
+  out:
+    g_object_unref(enumerator);
+
   fflush (stdout);
 
-  g_free(path);
+  if (error) {
+     g_printerr ("%s\n", error->message);
+     g_error_free (error);
+  }
 }
 
 GtkWidget *
